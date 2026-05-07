@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>السلم والحية: نظام المراحل</title>
+    <title>السلم والحية: الأصوات المنطقية</title>
     <style>
         :root {
             --primary: #6366f1;
@@ -22,10 +22,9 @@
             transition: background 1s ease;
         }
 
-        /* تنسيقات المراحل */
-        .level-1 { background: linear-gradient(to bottom, #1a2e1a, #0f172a); } /* غابة */
-        .level-2 { background: linear-gradient(to bottom, #450a0a, #0f172a); } /* بركان */
-        .level-3 { background: linear-gradient(to bottom, #1e1b4b, #0f172a); } /* فضاء */
+        .level-1 { background: linear-gradient(to bottom, #1a2e1a, #0f172a); }
+        .level-2 { background: linear-gradient(to bottom, #450a0a, #0f172a); }
+        .level-3 { background: linear-gradient(to bottom, #1e1b4b, #0f172a); }
 
         .header { margin: 20px; text-align: center; }
         #level-indicator { background: #f1c40f; color: black; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
@@ -53,7 +52,7 @@
 
         .cell.ladder::before { content: '🪜'; font-size: 20px; }
         .cell.snake::before { content: '🐍'; font-size: 20px; }
-        .cell.fire::before { content: '🔥'; font-size: 18px; } /* عائق جديد */
+        .cell.fire::before { content: '🔥'; font-size: 18px; }
 
         .player {
             width: 25px;
@@ -89,14 +88,13 @@
         }
 
         button:disabled { background: #475569; }
-
         .dice-box { font-size: 30px; background: white; color: black; padding: 5px 15px; border-radius: 10px; }
     </style>
 </head>
 <body class="level-1">
 
     <div class="header">
-        <h1>🎮 سلم وحية: <span id="level-name">الغابة الخضراء</span></h1>
+        <h1>🎮 سلم وحية: <span id="level-name">تحميل...</span></h1>
         <span id="level-indicator">المرحلة 1</span>
         <div id="msg" style="margin-top: 10px; color: #f1c40f;">دورك الآن!</div>
     </div>
@@ -111,23 +109,46 @@
         <button id="btn" onclick="play()">ارمي النرد</button>
     </div>
 
+    <!-- مكتبة الأصوات المنطقية -->
+    <!-- صوت نرد حقيقي -->
+    <audio id="snd-dice" src="https://www.soundjay.com/misc/sounds/dice-roll-1.mp3"></audio>
+    <!-- صوت صعود خشبي منطقي -->
+    <audio id="snd-ladder" src="https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3"></audio>
+    <!-- صوت انزلاق (حية) -->
+    <audio id="snd-snake" src="https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3"></audio>
+    <!-- صوت احتراق (نار) -->
+    <audio id="snd-fire" src="https://assets.mixkit.co/active_storage/sfx/2704/2704-preview.mp3"></audio>
+    <!-- صوت نجاح (فوز) -->
+    <audio id="snd-win" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
+    <!-- صوت خسارة منطقي -->
+    <audio id="snd-lose" src="https://www.soundjay.com/misc/sounds/fail-trombone-01.mp3"></audio>
+
 <script>
     let currentLevel = 1;
     let p1Pos = 1;
     let p2Pos = 1;
     let isWorking = false;
 
-    // إعدادات المراحل
     const levels = {
         1: { name: "الغابة الخضراء", class: "level-1", snakes: {25:5, 44:22, 98:70}, ladders: {4:20, 15:35, 50:80, 70:90}, fire: [] },
         2: { name: "وادي البراكين", class: "level-2", snakes: {30:10, 55:20, 75:40, 99:5}, ladders: {5:15, 40:60}, fire: [12, 45, 82] },
         3: { name: "ثقب الفضاء", class: "level-3", snakes: {20:2, 40:5, 60:10, 80:15, 95:20}, ladders: {2:50}, fire: [33, 66, 88] }
     };
 
+    function playSound(id) {
+        const audio = document.getElementById(id);
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log("الصوت بانتظار ضغطة زر لبدء العمل"));
+        }
+    }
+
     function initBoard() {
         const board = document.getElementById('board');
-        board.innerHTML = '<div id="p1" class="player"></div><div id="p2" class="player"></div>';
         const config = levels[currentLevel];
+        
+        // إعادة بناء الخلايا
+        board.innerHTML = '<div id="p1" class="player"></div><div id="p2" class="player"></div>';
         
         document.body.className = config.class;
         document.getElementById('level-name').innerText = config.name;
@@ -149,33 +170,38 @@
     function updatePos() {
         const c1 = document.getElementById('c' + p1Pos);
         const c2 = document.getElementById('c' + p2Pos);
-        document.getElementById('p1').style.top = c1.offsetTop + 5 + 'px';
-        document.getElementById('p1').style.left = c1.offsetLeft + 5 + 'px';
-        document.getElementById('p2').style.top = c2.offsetTop + 5 + 'px';
-        document.getElementById('p2').style.left = c2.offsetLeft + 15 + 'px';
+        if (c1 && c2) {
+            document.getElementById('p1').style.top = c1.offsetTop + 5 + 'px';
+            document.getElementById('p1').style.left = c1.offsetLeft + 5 + 'px';
+            document.getElementById('p2').style.top = c2.offsetTop + 5 + 'px';
+            document.getElementById('p2').style.left = c2.offsetLeft + 15 + 'px';
+        }
     }
 
     async function move(id, steps) {
+        playSound('snd-dice');
         for (let i = 0; i < steps; i++) {
             if (id === 1 && p1Pos < 100) p1Pos++;
             else if (id === 2 && p2Pos < 100) p2Pos++;
             updatePos();
-            await new Promise(r => setTimeout(r, 200));
+            await new Promise(r => setTimeout(r, 250));
         }
         
-        // فحص العوائق
         let pos = id === 1 ? p1Pos : p2Pos;
         const config = levels[currentLevel];
 
         if (config.ladders[pos]) {
+            playSound('snd-ladder');
             pos = config.ladders[pos];
-            document.getElementById('msg').innerText = "🚀 صعود صاروخي!";
+            document.getElementById('msg').innerText = "🚀 صعود ممتاز!";
         } else if (config.snakes[pos]) {
+            playSound('snd-snake');
             pos = config.snakes[pos];
-            document.getElementById('msg').innerText = "🐍 لدغة قوية!";
+            document.getElementById('msg').innerText = "🐍 انزلاق لأسفل!";
         } else if (config.fire.includes(pos)) {
+            playSound('snd-fire');
             pos = Math.max(1, pos - 5);
-            document.getElementById('msg').innerText = "🔥 احذر النار! رجعت للخلف";
+            document.getElementById('msg').innerText = "🔥 احذر! تراجعت للخلف";
         }
 
         if (id === 1) p1Pos = pos; else p2Pos = pos;
@@ -187,37 +213,41 @@
         isWorking = true;
         document.getElementById('btn').disabled = true;
 
-        // دورك
         let roll = Math.floor(Math.random() * 6) + 1;
         document.getElementById('dice').innerText = roll;
         await move(1, roll);
 
         if (p1Pos >= 100) {
-            alert("كفو! فزت بالمرحلة " + currentLevel);
-            if (currentLevel < 3) {
-                currentLevel++;
-                p1Pos = 1; p2Pos = 1;
-                initBoard();
-            } else {
-                alert("ختمت اللعبة يا بطل! 🎉");
-                location.reload();
-            }
+            playSound('snd-win');
+            setTimeout(() => {
+                alert("مبروك! فزت في المرحلة " + currentLevel);
+                if (currentLevel < 3) {
+                    currentLevel++;
+                    p1Pos = 1; p2Pos = 1;
+                    initBoard();
+                } else {
+                    alert("أنت بطل اللعبة النهائي! 🎉");
+                    location.reload();
+                }
+            }, 500);
             isWorking = false;
             document.getElementById('btn').disabled = false;
             return;
         }
 
-        // دور الكمبيوتر
-        document.getElementById('msg').innerText = "الكمبيوتر يفكر...";
-        await new Promise(r => setTimeout(r, 800));
+        document.getElementById('msg').innerText = "الكمبيوتر يتحرك...";
+        await new Promise(r => setTimeout(r, 1000));
         let cpuRoll = Math.floor(Math.random() * 6) + 1;
         document.getElementById('dice').innerText = cpuRoll;
         await move(2, cpuRoll);
 
         if (p2Pos >= 100) {
-            alert("هارد لك! الكمبيوتر غلبك. حاول مرة ثانية");
-            p1Pos = 1; p2Pos = 1;
-            initBoard();
+            playSound('snd-lose');
+            setTimeout(() => {
+                alert("للأسف، فاز الكمبيوتر.");
+                p1Pos = 1; p2Pos = 1;
+                initBoard();
+            }, 500);
         }
 
         document.getElementById('msg').innerText = "دورك الآن!";
@@ -225,7 +255,7 @@
         document.getElementById('btn').disabled = false;
     }
 
-    initBoard();
+    window.onload = initBoard;
 </script>
 </body>
 </html>
